@@ -175,17 +175,17 @@ int uart_attr_set(int fd, SERIAL_ATTR_ST *serial_attr)
         case 'n':
         case 'N':   //无奇偶校验位
             options.c_cflag &= ~PARENB;
-            options.c_cflag &= ~INPCK;
+            options.c_iflag &= ~INPCK;
             break;
         case 'o':
         case 'O':   //设置为奇校验
             options.c_cflag |= (PARODD | PARENB);
-            options.c_cflag |= INPCK;
+            options.c_iflag |= INPCK;
         case 'e':
         case 'E':   //设置为偶校验
             options.c_cflag |= PARENB;
             options.c_cflag &= ~PARODD;
-            options.c_cflag |= INPCK;
+            options.c_iflag |= INPCK;
             break;
         case 's':
         case 'S':   //设置为空格
@@ -345,8 +345,8 @@ static int rs232_test(int channel)
     }
     memset(write_buf, 0, sizeof(write_buf));
     snprintf(write_buf, sizeof(write_buf), "Com%d RS232 test string!\n", channel);
-    bufsize = strlen(write_buf)+1;
-
+    bufsize = strlen(write_buf);
+    printf("write_buf: %s\n", write_buf);
     serial_rs232_test(fd, write_buf, bufsize);
 
     return 0;
