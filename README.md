@@ -7,7 +7,7 @@
     # export STAGING_DIR=~/openwrt_widora/staging_dir/		（这个路径，取决于openwrt源码里面的staging_dir路径）     
   * 交叉编译:      
     # mipsel-openwrt-linux-gcc serial_test.c -lpthread -ldl -o serial_test  （编译应用程序serial_test）     
-···         
+```         
 ## 2.mqtt_demo编译步骤:     
 ```     
   * x86编译：      
