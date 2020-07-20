@@ -13,5 +13,5 @@
   * x86编译：      
     # mqtt_lib文件夹里面的动态库是编译paho mqtt源码生成的，mqtt_src文件夹里面的文件是从paho mqtt源码src目录里面抠取出来的。      
     # paho mqtt源码下载：git clone https://github.com/eclipse/paho.mqtt.c.git
-    # gcc mqtt_test.c mqtt_client.c -I./mqtt_src -L./mqtt_lib -lpaho-mqtt3a -lpaho-mqtt3as -lpaho-mqtt3c -lpaho-mqtt3cs -o mqtt_test     
+    # gcc mqtt_test.c mqtt_client.c -I./mqtt_src -L./mqtt_lib_x86 -lpaho-mqtt3a -lpaho-mqtt3as -lpaho-mqtt3c -lpaho-mqtt3cs -o mqtt_test     
 ```     
