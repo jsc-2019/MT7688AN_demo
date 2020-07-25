@@ -16,7 +16,7 @@
 #define DEV_NAME_LEN            31
 #define MAX_UART_NUM            2
 
-#define SERIAL_ATTR_BAUD        115200
+#define SERIAL_ATTR_BAUD        9600
 #define SERIAL_ATTR_DATABITS    8
 #define SERIAL_ATTR_STOPBITS    1
 #define SERIAL_ATTR_PARITY      'N'
@@ -24,6 +24,10 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define BUF_SIZE                    512
+
+#define ROW_PITCH 0x10
+#define LINE_BUF_LEN 0X80
+#define EXTENT_OFF 0X40
 
 static char g_dev_serial[][DEV_NAME_LEN] = {
     "/dev/ttyS0",
@@ -38,6 +42,69 @@ static void print_usage(const char *filename)
     printf(" 0 --/dev/ttyS0  com0 test, used as rs232.\n");
     printf(" 0 --/dev/ttyS1  com1 test, used as rs232.\n");
     printf(" 0 --/dev/ttyS2  com2 test, used as rs232.\n");
+}
+
+char hex_map[16] ="0123456789ABCDEF";
+
+int hex_dump(const char *buf, const size_t size, const size_t offset, FILE *fp)
+{
+    size_t column_idx;
+    size_t column_left;
+    size_t row_idx;
+    size_t row_num;
+    ssize_t i;
+    ssize_t ret;
+    char line_buffer[LINE_BUF_LEN];
+    char *index = buf + offset;
+    char *out;
+    
+    if (!buf || !fp || !size) 
+    {
+        ret = -1;
+        goto done;
+    }
+    
+    for (row_idx = 0; row_idx < (size >> 4) + (size << 28 == 0 ? 0 : 1); row_idx++) 
+    {
+        out = line_buffer;
+        row_num = row_idx << 4;
+        for ( i = 0; i < 8; i++ ) 
+        {
+            *out++ = hex_map [(row_num & 0xF0000000) >> 28];
+            row_num <<= 4;
+        }
+        
+        *out++ = ':';
+        *out++ = ' ';
+        
+        column_left = ((size >> 4) - row_idx) ? ROW_PITCH : (size & 0x0000000F);
+        for (column_idx = 0; column_idx < column_left; column_idx++, index++) 
+        {
+            *out++ = hex_map [(*index >> 4) & 0x0F];
+            *out++ = hex_map [(*index     ) & 0x0F];
+            *out++ = ' ';
+        }
+        
+        index -= column_left;
+        for (; (out - line_buffer) < EXTENT_OFF;)
+                *out++ = ' ';
+        
+        for (column_idx = 0; column_idx < column_left; column_idx++, index++) 
+        {
+            if ((*index < ' ') || (*index > '~'))
+                *out++ = '.';
+            else 
+                *out++ = *index;
+        }
+        
+        *out++ = '\n';
+        *out++ = '\0';
+        fputs(line_buffer, fp);
+    }
+
+    ret = 0;
+done:
+    return ret;
 }
 
 /******************************************************************* 
@@ -289,7 +356,8 @@ static void *uart_datas_read(void *arg)
         ret = read(fd, read_buf, sizeof(read_buf));
         if(ret != 0)
         {
-            printf("receive %d datas: %s\n", ret, read_buf);
+            //printf("receive %d datas: %s\n", ret, read_buf);
+            hex_dump(read_buf, ret, 0, stdout);
         }
     }
     return NULL;
@@ -307,13 +375,13 @@ static int uart_transfer(int fd, char *write_buf, int buf_size)
     }
     while (1)
     {
-        ret = write(fd, write_buf, buf_size);
-        if (ret != buf_size)
-        {
-            printf("write uart failed, ret=%d\n", ret);
-            break;
-        }
-        sleep(1);   //1s
+        // ret = write(fd, write_buf, buf_size);
+        // if (ret != buf_size)
+        // {
+        //     printf("write uart failed, ret=%d\n", ret);
+        //     break;
+        // }
+        sleep(2);   //1s
     }
     pthread_join(pid, NULL);
     return ret;    
